@@ -13,20 +13,26 @@ package todolog;
  * 
  *              String content
  *              long   taskID
- *              double timestamp
+ *              long timestamp
+ * 
+ * 8/22/19 - Added TaskName, removed unnecessary getters.
  * 
  */
 public class Entry{
 
 
     private String content;
-    private long taskID;
-    private double timestamp;
+    private String taskName;
+    private String taskID;
+    private long   timestamp;
 
-    public Entry(long taskID, String content, double timestamp){
-        setContent(content);
-        setTaskID(taskID);
-        setTimestamp(timestamp);
+    public Entry(String taskID, String taskName, String content, long timestamp){
+
+        this.content = content;
+        this.taskName = taskName;
+        this.taskID  = taskID;
+        this.timestamp = timestamp;
+
     }//Constructor
     
 
@@ -34,27 +40,17 @@ public class Entry{
         return timestamp;
     }//getTimestamp
 
-    public long getTaskID() {
+    public String getTaskID() {
         return taskID;
     }//getTaskID
 
-    private void setTaskID(long taskID) {
-        this.taskID = taskID;
-    }//setTaskID
+    public String getTaskName(){
+        return taskName;
+    }//getTaskName
 
     public String getContent() {
         return content;
     }//getContent
-
-    public void setContent(String content) {
-        this.content = content;
-    }//setContent
-
-    private void setTimestamp(double timestamp) {
-        this.timestamp = timestamp;
-    }//setTimeStamp
-
-
 
 
 

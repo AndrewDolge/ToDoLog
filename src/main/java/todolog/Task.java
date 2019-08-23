@@ -1,5 +1,6 @@
 package todolog;
 
+import java.util.Random;
 
 /**
  * Represents a task for the user.
@@ -19,57 +20,63 @@ package todolog;
  *          long    id
  *          String  name
  * 
+ *  8/21/19 - Made into an immutable data object. Removed setters for data fields.
+ *            added completed as construction parameter.
+ * 
  */
 public class Task {
 
     private boolean completed;
-    private long id;
+    private String id;
     private String name;
 
-    public Task(long id, String name) {
+    public Task(String id, String name, boolean completed) {
 
-        this.setId(id);
-        this.setName(name);
-        setCompleted(false);
+        this.id = id;
+        this.name = name;
+        this.completed = false;
     }// constructor
 
     public String getName() {
         return name;
     }//getName
 
-    private void setName(String name){
-        this.name = name;
-    }
 
-    public long getId() {
+    public String getId() {
         return id;
     }//getID
-
-    private void setId(long id) {
-        this.id = id;
-    }//setID
 
     public boolean isCompleted() {
         return completed;
     }// isCompleted
 
-    private void setCompleted(boolean completed) {
-        this.completed = completed;
-    }// setCompleted
-
     /**
-     * sets the task to completed.
+     * Generates an ID for a task.
+     * 
+     * Similar to Habitica's Task IDs. 
+     * 
+     * DO NOT USE WHEN INTEGRATING WITH HABITICA.
      * 
      */
-    private void complete() {
-        setCompleted(true);
-    }// complete
+    public static String generateID(){
+
+        return generateFourHex() + generateFourHex() + "-" + 
+                                   generateFourHex() + "-" + 
+                                   generateFourHex() + "-" + 
+                                   generateFourHex() + "-" + 
+                                   generateFourHex() + generateFourHex() + generateFourHex();
+       
+
+    }
 
     /**
-     * resets the task so it can be completed. "uncompletes" the task.
+     * Generates a random string with 4 hex characters.
+     * 
+     * @return
      */
-    private void reset() {
-        setCompleted(false);
+    private static String generateFourHex(){
+        return  Integer.toHexString(new Random().nextInt(65536));
+
     }
 
 }// Task
