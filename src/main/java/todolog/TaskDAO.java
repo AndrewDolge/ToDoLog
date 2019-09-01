@@ -2,6 +2,7 @@ package todolog;
 
 import java.util.List;
 
+
 /**
  * EntryStorage objects are able to save log entries in storage
  * 
@@ -15,19 +16,20 @@ import java.util.List;
  *         8/19/19 - Initialized, added interface methods: addTask completeTask
  *         getTasks resetTasks
  * 
+ *         8/24/2019 - Changed to standard DAO pattern, after learning about DAO patterns.
+ * 
  * 
  * 
  */
-public interface TaskStorage{
+public interface TaskDAO{
 
     /**
      * Adds a task into storage.
      * 
-     * 
      * @param name the name of the task
      * @return the id of the task
      */
-    public String addTask(String name);
+    public void addTask(String taskName);
 
     /**
      * marks the given task as complete.
@@ -36,7 +38,7 @@ public interface TaskStorage{
      * @throws IllegalArgumentException if the ID is not found. 
      * 
      */
-    public void completeTask(String taskID);
+    public void updateTask(Task task);
 
     /**
      * Gets a list of all tasks
@@ -46,11 +48,23 @@ public interface TaskStorage{
     public List<Task> getTasks();
 
     /**
-     * Resets all stored tasks to uncompleted.
-     * 
+     * Gets the entry with the specific ID
+     * @param taskID the id of the task
      */
-    public void resetTasks();
+    public Task getTask(int taskID);
 
+    /**
+     * removes the task from the daily tasks.
+     * 
+     * @param taskID the id of the task to be deleted.
+     */
+    public void removeTask(int taskID);
+
+
+    /**
+     * Deletes a task from the system.
+     */
+    public void deleteTask(int taskID);
 
 
 }//interface

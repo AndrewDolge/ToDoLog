@@ -1,38 +1,36 @@
 package todolog;
 
-import java.util.Random;
+import com.google.gson.JsonObject;
 
 /**
- * Represents a task for the user.
- * can be completed and reset.
+ * Represents a task for the user. can be completed and reset.
  * 
- * Stores information about tasks. 
+ * Stores information about tasks.
  * 
  * 
  * @author Andrew Dolge
  * 
  * 
  * 
- * -----  CHANGE LOG -------
+ *         ----- CHANGE LOG -------
  * 
- *  8/17/19 - Initialized, added getters and setters for:
- *          boolean completed
- *          long    id
- *          String  name
+ *         8/17/19 - Initialized, added getters and setters for: boolean
+ *         completed long id String name
  * 
- *  8/21/19 - Made into an immutable data object. Removed setters for data fields.
- *            added completed as construction parameter.
+ *         8/21/19 - Made into an immutable data object. Removed setters for
+ *         data fields. added completed as construction parameter.
  * 
  */
-public class Task {
+
+ public class Task {
 
     private boolean completed;
-    private String id;
+    private int  taskID;
     private String name;
 
-    public Task(String id, String name, boolean completed) {
+    public Task(int taskID, String name, boolean completed) {
 
-        this.id = id;
+        this.taskID = taskID;
         this.name = name;
         this.completed = false;
     }// constructor
@@ -41,42 +39,35 @@ public class Task {
         return name;
     }//getName
 
-
-    public String getId() {
-        return id;
-    }//getID
+    public int getTaskID() {
+        return taskID;
+    }//getTaskID
 
     public boolean isCompleted() {
         return completed;
     }// isCompleted
 
-    /**
-     * Generates an ID for a task.
-     * 
-     * Similar to Habitica's Task IDs. 
-     * 
-     * DO NOT USE WHEN INTEGRATING WITH HABITICA.
-     * 
-     */
-    public static String generateID(){
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }//setCompleted
 
-        return generateFourHex() + generateFourHex() + "-" + 
-                                   generateFourHex() + "-" + 
-                                   generateFourHex() + "-" + 
-                                   generateFourHex() + "-" + 
-                                   generateFourHex() + generateFourHex() + generateFourHex();
-       
-
+    public void setTaskID(int taskID) {
+        this.taskID = taskID;
     }
 
-    /**
-     * Generates a random string with 4 hex characters.
-     * 
-     * @return
-     */
-    private static String generateFourHex(){
-        return  Integer.toHexString(new Random().nextInt(65536));
-
+    public void setName(String name) {
+        this.name = name;
     }
+
+    public String toString(){
+
+        JsonObject object = new JsonObject();
+
+        object.addProperty("taskID", getTaskID());  
+        object.addProperty("taskName", getName());  
+        object.addProperty("completed", isCompleted());  
+
+        return object.toString();
+    }//toString
 
 }// Task
