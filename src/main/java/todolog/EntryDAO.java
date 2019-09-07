@@ -57,6 +57,13 @@ public interface EntryDAO {
     public Entry getEntry(int entryID);
 
     /**
+     * 
+     * Retrieves all entries from the system.
+     * @return a list of all entries
+     */
+    //public List<Entry> getEntires();
+
+    /**
      * Deletes the Entry in the system.
      * 
      * @throws IllegalArgumentException if the system does not have the given ID.

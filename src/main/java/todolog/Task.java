@@ -32,7 +32,7 @@ import com.google.gson.JsonObject;
 
         this.taskID = taskID;
         this.name = name;
-        this.completed = false;
+        this.completed = completed;
     }// constructor
 
     public String getName() {
