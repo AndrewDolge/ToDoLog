@@ -39,14 +39,6 @@ public interface EntryDAO {
      */
     public void updateEntry(Entry entry);
 
-    /**
-     * Gets a list of entries from the given taskID.
-     * 
-     * 
-     * @param taskID the id of the task
-     * @return a list of log entries
-     */
-    public List<Entry> findEntries(int taskID);
 
     /**
      * Retrieves the entry with the given id.
@@ -61,7 +53,20 @@ public interface EntryDAO {
      * Retrieves all entries from the system.
      * @return a list of all entries
      */
-    //public List<Entry> getEntires();
+    public List<Entry> findEntries();
+
+
+    /**
+     * 
+     * Retrieves all entries from the system with a timestamp between the two times, and with the given task ID.
+     * 
+     * 
+     * @param taskID  the id of the task. defaults to any task.
+     * @param minTime the minimum timestamp an entry should have. defaults to 0.
+     * @param maxTime the maximum timestamp an entry should have. defaults to Long.MAX
+     * 
+     */
+    public List<Entry> findEntries(Integer taskID, Long minTime, Long maxTime);
 
     /**
      * Deletes the Entry in the system.

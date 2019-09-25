@@ -1,7 +1,6 @@
 package todolog;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -10,6 +9,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Test;
@@ -20,6 +20,8 @@ import org.junit.Test;
  * 
  */
 public class JDBCDAOimplTest{
+
+    private static Logger log = Logger.getLogger(JDBCDAOimplTest.class.getName());
 
 
     public static String getTestDBURL(){
@@ -61,13 +63,20 @@ public class JDBCDAOimplTest{
     }
 
     public static List<Entry> getExpectedEntries(long logTime){
+        return getExpectedEntries(logTime, 1);
+    }
+
+    public static List<Entry> getExpectedEntries(long logTime, int id){
         List<Entry> expected = new ArrayList<Entry>();
-        expected.add(new Entry(1, 1, "1", logTime));
-        expected.add(new Entry(2, 1, "2", logTime));
-        expected.add(new Entry(3, 2, "3", logTime));
-        expected.add(new Entry(4, 2, "4", logTime));
-        expected.add(new Entry(5, 3, "5", logTime));
-        expected.add(new Entry(6, 3, "6", logTime));
+
+        for(Task t: getExpectedTasks()){
+
+            expected.add(new Entry(id, t.getTaskID(), Integer.toString(id), logTime));
+            id++;
+            expected.add(new Entry(id, t.getTaskID(), Integer.toString(id), logTime));
+            id++;
+        }
+
         return expected;
     }
 
@@ -77,9 +86,8 @@ public class JDBCDAOimplTest{
 
         try {
             Class.forName("org.sqlite.JDBC");
-        } catch (ClassNotFoundException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            log.info(e.toString());
         }
 
         try(Connection conn = DriverManager.getConnection(getTestDBURL())){
@@ -96,7 +104,38 @@ public class JDBCDAOimplTest{
 
     } 
 
+
+    /**
+     * Compare two lists of entries
+     */
+    public void compareEntries(List<Entry> expected, List<Entry> actual){
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+
+        for(int i = 0; i < actual.size(); i++){
+            assertEquals(expected.get(i).toString(), actual.get(i).toString());
+        }
+
+    }//compareEntries
    
+    /**
+     * compare two lists of tasks
+     */
+    public void compareTasks(List<Task> expected, List<Task> actual){
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+
+        for(int i = 0; i < actual.size(); i++){
+            assertEquals(expected.get(i).toString(), actual.get(i).toString());
+        }
+
+    }
+
+
+//*************************TESTS************************
+
     /**
      * Tests if the database can be created and set up correctly.
      * 
@@ -121,23 +160,21 @@ public class JDBCDAOimplTest{
         String url = getTestDBURL();
         JDBCDAOimpl db = new JDBCDAOimpl(url);
 
-        for(Task t: getExpectedTasks()){
-            db.addTask(t.getName());
-        }
+        fillDBWithTasks(db);
 
         List<Task> tasks = db.getTasks();
 
-        assertNotNull(tasks);
-        assertEquals(3, tasks.size());
-
-        for(int i = 0; i < tasks.size(); i++){
-            assertEquals(tasks.get(i).toString(), getExpectedTasks().get(i).toString());
-        }
-        
+        compareTasks(getExpectedTasks(), tasks);
 
     }//testTaskCreation
 
 
+    /**
+     * 
+     * Tests to see that if Entries outside of the current day count towards completing the task.
+     * Does the task's daily timer "rollover?"
+     * 
+     */
     @Test
     public void testTaskRollover(){
 
@@ -146,19 +183,19 @@ public class JDBCDAOimplTest{
         fillDBWithTasks(db);
         fillDBWithEntries(db, 1);
 
-        List<Task> tasks = db.getTasks();
-        List<Task> expectedTasks = getExpectedTasks();
-
-        for(int i = 0; i < expectedTasks.size(); i++){
-
-            assertEquals(tasks.get(i).toString(), expectedTasks.get(i).toString());
-        }
+        compareTasks(getExpectedTasks(), db.getTasks());
             
      
 
     
     }//testTaskRollover
 
+    /**
+     * 
+     * 
+     * Tests whether or not the task is completed when a log entry is added within the current "day"
+     * 
+     */
     @Test
     public void testTaskCompletion(){
 
@@ -167,39 +204,41 @@ public class JDBCDAOimplTest{
         fillDBWithTasks(db);
         fillDBWithEntries(db, 2);
 
-        List<Task> tasks = db.getTasks();
-        List<Task> expectedTasks = getExpectedTasksCompleted();
-
-        for(int i = 0; i < expectedTasks.size(); i++){
-
-            assertEquals(tasks.get(i).toString(), expectedTasks.get(i).toString());
-        }
-
+        compareTasks(getExpectedTasksCompleted(), db.getTasks());
+            
+    
     }//testTaskCompletion
 
-
+    /**
+     * Test the removeTask() method
+     * This should remove it from the list of all entries, but should be accessible with the id.
+     * 
+     * 
+     */
     @Test
     public void testTaskRemoval(){
 
-        String url = getTestDBURL();
-        JDBCDAOimpl db = new JDBCDAOimpl(url);
-
+        JDBCDAOimpl db = new JDBCDAOimpl(getTestDBURL());
         fillDBWithTasks(db);
-
         db.removeTask(3);
 
-        List<Task> tasks = db.getTasks();
+        List<Task> expected = getExpectedTasks();
+        expected.remove(2);
 
-        assertNotNull(tasks);
+        compareTasks( expected, db.getTasks());
         assertNotNull(db.getTask(3));
-        assertEquals(2, tasks.size());
 
-        for(int i = 0; i < tasks.size(); i++){
-            assertEquals(tasks.get(i).toString(), getExpectedTasks().get(i).toString());
-        }
+      
         
     }//testTaskRemoval
 
+    /**
+     * 
+     * 
+     * Tests the deleteTask() method.
+     * This should remove the task from both the list of all entries, and getTask(id) should return null.
+     * 
+     */
     @Test
     public void testTaskDeletion(){
 
@@ -207,22 +246,24 @@ public class JDBCDAOimplTest{
         JDBCDAOimpl db = new JDBCDAOimpl(url);
 
         fillDBWithTasks(db);
-
         db.deleteTask(3);
+        
+        List<Task> expected = getExpectedTasks();
+        expected.remove(2);
 
-        List<Task> tasks = db.getTasks();
-
-        assertNotNull(tasks);
-        assertEquals(2, tasks.size());
+        compareTasks(expected, db.getTasks());
+        //confirm that the task is gone from the system.
         assertNull(db.getTask(3));
 
-        for(int i = 0; i < tasks.size(); i++){
-            assertEquals(tasks.get(i).toString(), getExpectedTasks().get(i).toString());
-        }
         
     }//testTaskCreation
 
-
+    /**
+     * 
+     * test the updateTask() method, including completing the task and changing the name.
+     * 
+     * 
+     */
     @Test
     public void testTaskUpdate(){
 
@@ -269,38 +310,43 @@ public class JDBCDAOimplTest{
     /**
      * Tests uncompleting a task with multiple log entries.
      * 
+     * updateTask() with complete = false should delete all entries from the system in the given time
+     * 
      */
     @Test
     public void testTaskUpdateUncompleteWithAddedLogs(){
 
-        
-        String url = getTestDBURL();
-        JDBCDAOimpl db = new JDBCDAOimpl(url,0,2);
+        long startTime = 1;
+        long endTime   = 2;
+        int  id        = 1; //the id of the task to uncomplete
+
+      
+        JDBCDAOimpl db = new JDBCDAOimpl(getTestDBURL(),startTime,endTime);
         fillDBWithTasks(db);
-        fillDBWithEntries(db, 1);
-        fillDBWithEntries(db, 2);
+        fillDBWithEntries(db, startTime);
+        fillDBWithEntries(db, endTime);
 
         //unComplete the task
         Task unCompletedTask = new Task(1, "completed!", false);
         db.updateTask(unCompletedTask);
 
         //get the updated task and compare them
-        Task updatedTask = db.getTask(1);
+        Task updatedTask = db.getTask(id);
         assertEquals(unCompletedTask.toString(), updatedTask.toString() );
 
         //assert that the only entries remaining are outside of the deleted log range
-        assertEquals(2, db.findEntries(1).size());
+        assertEquals(2, db.findEntries(id).size());
 
-        for(Entry e: db.findEntries(1)){
-
-            assertNotEquals((long) 1, e.getlogTime());
-
-        }
+        compareEntries(new ArrayList<Entry>(), db.findEntries(id, startTime,endTime));
 
     }
-
+/**
+ * 
+ * tests the addLogEntry() method and the findEntries() method
+ * 
+ */
     @Test
-    public void testEntryCreation(){
+    public void testEntryCreationAndFind(){
 
         long time = 1;
 
@@ -310,13 +356,27 @@ public class JDBCDAOimplTest{
         fillDBWithTasks(db);
         fillDBWithEntries(db,time);
 
+        compareEntries(getExpectedEntries(time), db.findEntries());
+
+    }
+
+    @Test
+    public void testEntryFindWithTasks(){
+
+        long time = 1;
+
+        String url = getTestDBURL();
+        JDBCDAOimpl db = new JDBCDAOimpl(url);
+
+        fillDBWithTasks(db);
+        fillDBWithEntries(db,time);
+
+
         List<Task> tasks = db.getTasks();
 
-        int i = 0;
+        for(int i = 0; i < tasks.size(); i++){
 
-        for(Task t: tasks){
-
-           List<Entry> entries = db.findEntries(t.getTaskID());
+           List<Entry> entries = db.findEntries(tasks.get(i).getTaskID());
            List<Entry> expectedEntries = getExpectedEntries(time);
       
             assertNotNull(entries);
@@ -324,9 +384,42 @@ public class JDBCDAOimplTest{
 
             assertEquals(entries.get(0).toString(), expectedEntries.get(2*i    ).toString());
             assertEquals(entries.get(1).toString(), expectedEntries.get(2*i + 1).toString());
-            i++;
+
         }
+        
     }
+
+    /**
+     * Tests findEntry with different timestamps
+     * 
+     * 
+     */
+    @Test
+    public void testEntryFindWithTime(){
+
+        long time       = 3 ;
+
+        
+
+        String url = getTestDBURL();
+        JDBCDAOimpl db = new JDBCDAOimpl(url);
+
+        fillDBWithTasks     (db          );
+        fillDBWithEntries   (db, time    );
+        fillDBWithEntries   (db, time + 1);
+        fillDBWithEntries   (db, time - 1);
+    
+       
+       
+     
+        compareEntries( getExpectedEntries(time) ,db.findEntries(time      , time+1      )  );     
+ 
+        
+
+    }
+
+
+
 
     @Test
     public void testEntryUpdate(){

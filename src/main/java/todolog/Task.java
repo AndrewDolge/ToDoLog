@@ -1,6 +1,7 @@
 package todolog;
 
-import com.google.gson.JsonObject;
+import com.google.gson.Gson;
+
 
 /**
  * Represents a task for the user. can be completed and reset.
@@ -61,13 +62,27 @@ import com.google.gson.JsonObject;
 
     public String toString(){
 
+
+        Gson gson = new Gson();
+
+        return gson.toJson(this);
+        /*
         JsonObject object = new JsonObject();
 
         object.addProperty("taskID", getTaskID());  
         object.addProperty("taskName", getName());  
-        object.addProperty("completed", isCompleted());  
-
+        object.addProperty("completed", isCompleted()); 
         return object.toString();
+        */ 
+
+    
+
+
+       
+
     }//toString
 
+
+
+    
 }// Task

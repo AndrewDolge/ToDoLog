@@ -12,6 +12,12 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+
+
+
 /**
  * Stores tasks and log entries into a sql database.
  * 
@@ -25,6 +31,8 @@ import java.util.List;
 
 public class JDBCDAOimpl implements EntryDAO, TaskDAO {
 
+    private static Logger log = LogManager.getLogger(JDBCDAOimpl.class.getName());
+    
     private String url;
     private long startTime;
     private long endTime;
@@ -96,8 +104,9 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             result = new Task(taskData.getInt("taskID"), taskData.getString("taskName"), isTaskCompleted(taskID));
 
         } catch (SQLException sqle) {
+            
+            log.info(sqle.toString());
 
-            sqle.printStackTrace();
         }
 
         return result;
@@ -163,20 +172,18 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
                 // remove all tasks from the database
             } else if (getTask(task.getTaskID()).isCompleted() && !task.isCompleted()) {
 
-                // TODO update this for loop when findEntries with logTime gets implemented
-                for (Entry e : findEntries(task.getTaskID())) {
+                for (Entry e : findEntries(task.getTaskID(), startTime, endTime)) {
 
-                    if (startTime <= e.getlogTime() && e.getlogTime() < endTime) {
-                        deleteEntry(e.getEntryID());
-                    } // if
+                    deleteEntry(e.getEntryID());
 
                 } // for
 
             } // else
 
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+          
+            log.info(e.toString());
+          
         } // catch
 
     }// updateTask
@@ -230,20 +237,21 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             statement.executeUpdate();
 
         } catch (SQLException sqle) {
-            // TODO handle sql exception
+        
+            log.info(sqle.toString());
         }
 
     }// addLogEntry
 
+
     @Override
-    public List<Entry> findEntries(int taskID) {
+    public List<Entry> findEntries() {
         ArrayList<Entry> entries = new ArrayList<Entry>();
         try (Connection conn = connect()) {
 
-            PreparedStatement statement = conn.prepareStatement("SELECT * FROM Entries WHERE taskID = ?");
-            statement.setInt(1, taskID);
+            PreparedStatement statement = conn.prepareStatement("SELECT * FROM Entries");
 
-            // TODO log getEntry result
+          
             ResultSet entryData = statement.executeQuery();
 
             // adds all tasks that returned from the query to the list
@@ -256,11 +264,68 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             } // while
 
         } catch (SQLException sqle) {
-            // TODO handle sql exception
+            
+            log.info(sqle.toString());
         }
 
         return entries;
-    }// getEntries
+    }
+
+    
+    public List<Entry> findEntries(int taskID) {
+       return findEntries(taskID, null, null);
+    }//findEntries
+
+    public List<Entry> findEntries(Long minTime, Long maxTime){
+        return findEntries(null, minTime, maxTime);
+    }//findEntries
+
+    @Override
+    public List<Entry> findEntries(Integer taskID, Long minTime, Long maxTime) {
+        ArrayList<Entry> entries = new ArrayList<Entry>();
+        String sql;
+
+        if(taskID == null) {
+            sql = "SELECT * FROM Entries WHERE ? <=  logTime AND logTime < ?";
+           
+        }else{
+           sql = "SELECT * FROM Entries WHERE ? <=  logTime AND logTime < ? AND taskID = ?";
+        }
+
+        if(minTime == null){minTime = (long) 0;}
+        if(maxTime == null){maxTime = Long.MAX_VALUE;}
+       
+
+        try (Connection  conn = connect()) {
+
+            PreparedStatement statement = conn.prepareStatement(sql);
+            statement.setLong(1, minTime);
+            statement.setLong(2, maxTime);
+            if(taskID != null) {statement.setInt(3, taskID);}
+
+ 
+
+         
+            ResultSet entryData = statement.executeQuery();
+
+            // adds all tasks that returned from the query to the list
+            while (entryData.next()) {
+
+                entries.add(new Entry(entryData.getInt("entryID"), entryData.getInt("taskID"),
+                        entryData.getString("content"), entryData.getLong("logTime")
+
+                ));
+            } // while
+
+        } catch (SQLException sqle) {
+          
+            log.info(sqle.toString());
+        
+        }
+
+        return entries;
+    }
+
 
     @Override
     public void updateEntry(Entry entry) {
@@ -278,8 +343,8 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             statement.executeUpdate();
 
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+           
+            log.info(e.toString());
         }
 
     }// updateEntry
@@ -299,7 +364,8 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
                     entryData.getLong("logTime"));
 
         } catch (SQLException sqle) {
-            // TODO handle sql exception in getEntry
+            
+            log.info(sqle.toString());
         }
 
         return result;
@@ -317,8 +383,8 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             statement.executeUpdate();
 
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+           
+            log.info(e.toString());
         }
 
     }
@@ -351,8 +417,8 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             result = completed.next();
 
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+          
+            log.info(e.toString());
         }
 
         return result;
@@ -364,9 +430,18 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
      * 
      */
     private static ZonedDateTime getStartOfDay() {
-        return ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).toLocalDate()
-                .atStartOfDay(ZoneId.systemDefault());
+
+
+        
+
+        return ZonedDateTime.ofInstant(
+                                        Instant.now(),
+                                        ZoneId.systemDefault()).toLocalDate()
+                                        .atStartOfDay(ZoneId.systemDefault()
+                                        );
     }// getStartOfDay
+
+
 
     /**
      * Establishes a connection to the database.
@@ -388,12 +463,14 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             sqle.printStackTrace();
 
         } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            
+            log.info(e.toString());
         }
 
         return conn;
 
     }// connect
+
+
 
 }// class
