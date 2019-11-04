@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="380.0" prefWidth="545.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="todolog.gui.TabEntryController">
+    <children>
+
+    <TableView fx:id="tableViewEntries" layoutX="15.0" layoutY="15.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="315.0" prefWidth="250.0">
+         <columns>
+            <TableColumn fx:id="tableColumnTime" prefWidth="133.59997844696045" text="Time" />
+            <TableColumn fx:id="tableColumnTask" prefWidth="115.99998474121094" text="Task" />
+         </columns></TableView>
+    <DatePicker fx:id="datePickerBefore" layoutX="110.0" layoutY="338.0" prefHeight="25.0" prefWidth="75.0" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="110.0" />
+    <ChoiceBox fx:id="choiceBoxTaskPicker" layoutX="15.0" layoutY="338.0" prefHeight="25.0" prefWidth="80.0" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="15.0" />
+    <Button fx:id="buttonSearch" layoutX="199.0" layoutY="339.0" mnemonicParsing="false" onMouseClicked="#onSearchButtonClick" prefHeight="25.0" prefWidth="65.0" text="Search" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="200.0" />
+    <TextArea fx:id="textAreaEntryDisplay" editable="false" layoutX="280.0" layoutY="15.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="315.0" prefWidth="250.0" />
+      <Button fx:id="buttonUpdate" layoutX="479.0" layoutY="339.0" mnemonicParsing="false" onMouseClicked="#onUpdateButtonClick" prefHeight="25.0" prefWidth="65.0" text="Update" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="15.0" />
+
+
+
+    </children>
+    </AnchorPane>

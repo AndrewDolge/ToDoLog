@@ -1,0 +1,11 @@
+
+
+
+.task-completed{
+    -fx-background-color: rgb(100, 200, 100);
+    
+}
+
+.task-completed:selected{
+    -fx-background-color: rgb(150, 200, 150);
+}

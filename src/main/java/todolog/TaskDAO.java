@@ -67,4 +67,11 @@ public interface TaskDAO{
     public void deleteTask(int taskID);
 
 
+    /**
+     * Deletes everything in the system, as if no tasks were added.
+     * 
+     */
+    public void resetTasks();
+
+
 }//interface

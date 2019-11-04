@@ -60,7 +60,12 @@ import com.google.gson.Gson;
         this.name = name;
     }
 
+
     public String toString(){
+        return getName();
+    }
+    
+    public String toJSON(){
 
 
         Gson gson = new Gson();

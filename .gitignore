@@ -6,9 +6,9 @@ build
 .vscode/settings.json
 .vscode/launch.json
 .vscode/
-test.db
+*.db
 .settings/
 .settings/org.eclipse.jdt.core.prefs
 .settings/org.eclipse.buildship.core.prefs
-logs/2019-09/tdl-09-19-2019-1.log.gz
 logs/
+

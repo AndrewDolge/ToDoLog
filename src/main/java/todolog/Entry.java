@@ -75,6 +75,9 @@ public class Entry{
 
 
     public String toString(){
+        return toJSON();
+    }
+    public String toJSON(){
 
         JsonObject object = new JsonObject();
 

@@ -6,20 +6,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
-
-
 /**
  * Stores tasks and log entries into a sql database.
+ * 
+ * //TODO: Refactor project to a module for easier deployment
  * 
  * @author Andrew Dolge
  * 
@@ -32,14 +28,14 @@ import org.apache.logging.log4j.Logger;
 public class JDBCDAOimpl implements EntryDAO, TaskDAO {
 
     private static Logger log = LogManager.getLogger(JDBCDAOimpl.class.getName());
-    
+
     private String url;
     private long startTime;
     private long endTime;
 
     public JDBCDAOimpl(String url) {
 
-        this(url, getStartOfDay().toEpochSecond(), getStartOfDay().plusDays(1).toEpochSecond());
+        this(url, TimeUtil.getDayStart(),TimeUtil.getNextDayStart());
 
     }
 
@@ -48,22 +44,8 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
         this.startTime = startTime;
         this.endTime = endTime;
 
-        // attempt to create the tables for the project
-        try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
-
-            stmt.execute("CREATE TABLE IF NOT EXISTS Tasks (       \n" + "taskID INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                    + "taskName TEXT NOT NULL,                  \n" + "active INTEGER NOT NULL DEFAULT 1        \n"
-                    + ");");
-
-            stmt.execute("CREATE TABLE IF NOT EXISTS Entries (" + "entryID   INTEGER PRIMARY KEY,\n"
-                    + "content   TEXT,\n" + "logTime NUMERIC NOT NULL,\n" + "taskID    INTEGER NOT NULL,\n"
-                    + "FOREIGN KEY (taskID) REFERENCES Tasks(taskID)\n" + "ON DELETE CASCADE" + " \n);");
-
-        } catch (SQLException sqle) {
-
-            throw new RuntimeException("JDBCDAOimpl.Constructor: SQL exception caught. error: " + sqle.getMessage(),
-                    sqle);
-        }
+        createTasksTable(false);
+        createEntriesTable(false);
 
     }// constructor
 
@@ -104,7 +86,7 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             result = new Task(taskData.getInt("taskID"), taskData.getString("taskName"), isTaskCompleted(taskID));
 
         } catch (SQLException sqle) {
-            
+
             log.info(sqle.toString());
 
         }
@@ -131,15 +113,9 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             // adds all tasks that returned from the query to the list
             while (taskData.next()) {
 
-                boolean completed = isTaskCompleted(taskData.getInt("taskID")) ; 
+                boolean completed = isTaskCompleted(taskData.getInt("taskID"));
 
-                tasks.add(
-                    new Task(
-                     taskData.getInt("taskID"),
-                     taskData.getString("taskName"),
-                     completed
-                     )
-                );
+                tasks.add(new Task(taskData.getInt("taskID"), taskData.getString("taskName"), completed));
             } // while
 
         } catch (SQLException sqle) {
@@ -181,9 +157,9 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             } // else
 
         } catch (SQLException e) {
-          
+
             log.info(e.toString());
-          
+
         } // catch
 
     }// updateTask
@@ -204,7 +180,7 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             sqle.printStackTrace();
         }
 
-    }
+    }//removeTask
 
     @Override
     public void deleteTask(int taskID) {
@@ -224,6 +200,11 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
     }// deleteTask
 
     @Override
+    public void addLogEntry(int taskID, String content) {
+       addLogEntry(taskID, content,TimeUtil.getNow());
+    }//addLogEntry
+
+    @Override
     public void addLogEntry(int taskID, String content, long logTime) {
 
         try (Connection conn = connect()) {
@@ -237,12 +218,11 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             statement.executeUpdate();
 
         } catch (SQLException sqle) {
-        
+
             log.info(sqle.toString());
         }
 
     }// addLogEntry
-
 
     @Override
     public List<Entry> findEntries() {
@@ -251,7 +231,6 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
 
             PreparedStatement statement = conn.prepareStatement("SELECT * FROM Entries");
 
-          
             ResultSet entryData = statement.executeQuery();
 
             // adds all tasks that returned from the query to the list
@@ -264,48 +243,49 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             } // while
 
         } catch (SQLException sqle) {
-            
+
             log.info(sqle.toString());
         }
 
         return entries;
-    }
+    }//findEntries
 
-    
     public List<Entry> findEntries(int taskID) {
-       return findEntries(taskID, null, null);
-    }//findEntries
+        return findEntries(taskID, null, null);
+    }// findEntries
 
-    public List<Entry> findEntries(Long minTime, Long maxTime){
+    public List<Entry> findEntries(Long minTime, Long maxTime) {
         return findEntries(null, minTime, maxTime);
-    }//findEntries
+    }// findEntries
 
     @Override
     public List<Entry> findEntries(Integer taskID, Long minTime, Long maxTime) {
         ArrayList<Entry> entries = new ArrayList<Entry>();
         String sql;
 
-        if(taskID == null) {
+        if (taskID == null) {
             sql = "SELECT * FROM Entries WHERE ? <=  logTime AND logTime < ?";
-           
-        }else{
-           sql = "SELECT * FROM Entries WHERE ? <=  logTime AND logTime < ? AND taskID = ?";
+
+        } else {
+            sql = "SELECT * FROM Entries WHERE ? <=  logTime AND logTime < ? AND taskID = ?";
         }
 
-        if(minTime == null){minTime = (long) 0;}
-        if(maxTime == null){maxTime = Long.MAX_VALUE;}
-       
+        if (minTime == null) {
+            minTime = (long) 0;
+        }
+        if (maxTime == null) {
+            maxTime = Long.MAX_VALUE;
+        }
 
-        try (Connection  conn = connect()) {
+        try (Connection conn = connect()) {
 
             PreparedStatement statement = conn.prepareStatement(sql);
             statement.setLong(1, minTime);
             statement.setLong(2, maxTime);
-            if(taskID != null) {statement.setInt(3, taskID);}
+            if (taskID != null) {
+                statement.setInt(3, taskID);
+            }
 
- 
-
-         
             ResultSet entryData = statement.executeQuery();
 
             // adds all tasks that returned from the query to the list
@@ -318,14 +298,13 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             } // while
 
         } catch (SQLException sqle) {
-          
+
             log.info(sqle.toString());
-        
+
         }
 
         return entries;
-    }
-
+    }//findEntries
 
     @Override
     public void updateEntry(Entry entry) {
@@ -343,7 +322,7 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             statement.executeUpdate();
 
         } catch (SQLException e) {
-           
+
             log.info(e.toString());
         }
 
@@ -364,13 +343,13 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
                     entryData.getLong("logTime"));
 
         } catch (SQLException sqle) {
-            
+
             log.info(sqle.toString());
         }
 
         return result;
 
-    }
+    }//getEntry
 
     @Override
     public void deleteEntry(int entryID) {
@@ -383,11 +362,86 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             statement.executeUpdate();
 
         } catch (SQLException e) {
-           
+
             log.info(e.toString());
         }
 
-    }
+    }//deleteEntry
+
+    @Override
+    public void resetTasks() {
+        createTasksTable(true);
+
+    }// resetTasks
+
+    @Override
+    public void resetEntries() {
+        createTasksTable(true);
+
+    }// resetEntries
+
+    /**
+     * creates the Tasks Table.
+     * 
+     * @param overwrite if true, will overwrite an existing table.
+     */
+    private void createTasksTable(boolean overwrite) {
+
+        try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
+
+            if (overwrite) {
+
+                stmt.execute("DROP TABLE IF EXISTS Tasks;");
+
+                stmt.execute("CREATE TABLE  Tasks (       \n" + "taskID INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                        + "taskName TEXT NOT NULL,                  \n" + "active INTEGER NOT NULL DEFAULT 1        \n"
+                        + ");");
+
+            } else {
+
+                stmt.execute("CREATE TABLE IF NOT EXISTS Tasks (       \n"
+                        + "taskID INTEGER PRIMARY KEY AUTOINCREMENT,\n" + "taskName TEXT NOT NULL,                  \n"
+                        + "active INTEGER NOT NULL DEFAULT 1        \n" + ");");
+
+            } // else
+
+        } catch (SQLException sqle) {
+
+            throw new RuntimeException("JDBCDAOimpl.createTaskTable: SQL exception caught. error: " + sqle.getMessage(),
+                    sqle);
+        } // sqle
+    }// createTasksTable
+
+    /**
+     * creates the Tasks Table.
+     * 
+     * @param overwrite if true, will overwrite an existing table.
+     */
+    private void createEntriesTable(boolean overwrite) {
+
+        try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
+
+            if (overwrite) {
+
+                stmt.execute("DROP TABLE IF EXISTS Entries;");
+
+                stmt.execute("CREATE TABLE  Entries (" + "entryID   INTEGER PRIMARY KEY,\n" + "content   TEXT,\n"
+                        + "logTime NUMERIC NOT NULL,\n" + "taskID    INTEGER NOT NULL,\n"
+                        + "FOREIGN KEY (taskID) REFERENCES Tasks(taskID)\n" + "ON DELETE CASCADE" + " \n);");
+            } else {
+
+                stmt.execute("CREATE TABLE IF NOT EXISTS Entries (" + "entryID   INTEGER PRIMARY KEY,\n"
+                        + "content   TEXT,\n" + "logTime NUMERIC NOT NULL,\n" + "taskID    INTEGER NOT NULL,\n"
+                        + "FOREIGN KEY (taskID) REFERENCES Tasks(taskID)\n" + "ON DELETE CASCADE" + " \n);");
+
+            } // else
+
+        } catch (SQLException sqle) {
+
+            throw new RuntimeException(
+                    "JDBCDAOimpl.createEntriesTable: SQL exception caught. error: " + sqle.getMessage(), sqle);
+        } // sqle
+    }// createTasksTable
 
     /**
      * Checks to see if the task has log entries between the given start and end
@@ -417,7 +471,7 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             result = completed.next();
 
         } catch (SQLException e) {
-          
+
             log.info(e.toString());
         }
 
@@ -429,18 +483,6 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
      * Gets a ZonedDateTime with the time at the start of the current day.
      * 
      */
-    private static ZonedDateTime getStartOfDay() {
-
-
-        
-
-        return ZonedDateTime.ofInstant(
-                                        Instant.now(),
-                                        ZoneId.systemDefault()).toLocalDate()
-                                        .atStartOfDay(ZoneId.systemDefault()
-                                        );
-    }// getStartOfDay
-
 
 
     /**
@@ -463,7 +505,7 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
             sqle.printStackTrace();
 
         } catch (ClassNotFoundException e) {
-            
+
             log.info(e.toString());
         }
 

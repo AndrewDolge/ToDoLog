@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -19,10 +20,12 @@ import org.junit.Test;
  * 
  * 
  */
+//@Ignore 
 public class JDBCDAOimplTest{
 
-    private static Logger log = Logger.getLogger(JDBCDAOimplTest.class.getName());
+    public JDBCDAOimplTest(){}
 
+    private static Logger log = Logger.getLogger(JDBCDAOimplTest.class.getName());
 
     public static String getTestDBURL(){
         return "jdbc:sqlite:test.db";
@@ -103,7 +106,6 @@ public class JDBCDAOimplTest{
 
 
     } 
-
 
     /**
      * Compare two lists of entries
@@ -418,9 +420,6 @@ public class JDBCDAOimplTest{
 
     }
 
-
-
-
     @Test
     public void testEntryUpdate(){
 
@@ -480,7 +479,5 @@ public class JDBCDAOimplTest{
         assertEquals(0, entries.size());
 
     }
-
-
 
 }

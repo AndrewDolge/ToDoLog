@@ -1,20 +1,26 @@
 package todolog;
 
 import java.io.File;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 import com.google.gson.Gson;
+
+import javafx.application.Application;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
-import picocli.CommandLine.Model.CommandSpec;
+import todolog.gui.GUI;
+
+/**
+ * Command line Interface for th Jar file using picocli.
+ * 
+ */
+
 
 @Command(name = "todolog", mixinStandardHelpOptions = true, version = "todolog 0.0.1", description = "daily todo with log entries.")
-public class ToDoLog implements Runnable{
+public class CLI implements Runnable{
 
     @Option(names={"-db","--dbPath"}, paramLabel = "SQLITEDB",description = "the path to the database file", defaultValue = "tdl.db")
     private File dbPath;
@@ -32,6 +38,7 @@ public class ToDoLog implements Runnable{
         this.task  = impl;
     }
 
+
     @Command(name = "addTask", description = "Adds a new daily task to the system.")
     public void addTask (@Parameters(paramLabel = "<name of task>", index = "0" ) String taskName){
         updateDAO();
@@ -47,11 +54,10 @@ public class ToDoLog implements Runnable{
     ){
         updateDAO();
 
-       long now = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).toEpochSecond();
+      
         
         if(content != null){
-
-            entry.addLogEntry(taskID, content, now);
+            entry.addLogEntry(taskID, content);
         }else{
 
             Task completed = task.getTask(taskID);
@@ -88,7 +94,6 @@ public class ToDoLog implements Runnable{
 
     }
 
-
     @Command(name = "removeTask", description = "removes a daily task")
     public void removeTask(
         @Option(names = {"-t", "--taskID"}, description = "the id of the task", required = true) int taskID
@@ -98,7 +103,6 @@ public class ToDoLog implements Runnable{
         task.removeTask(taskID);
 
     }//removeTask
-
 
     @Command(name = "updateEntry", description = "updates the content of an entry")
     public void updateEntry(
@@ -158,21 +162,20 @@ public class ToDoLog implements Runnable{
     @Command(name = "reset", description = "resets the database")
     public void reset(){
 
-        //TODO implement reset
+        task.resetTasks();
+        entry.resetEntries();
     }
-
-    public static void main(String[] args) {
-
-        int exitCode = new CommandLine(new ToDoLog()).execute(args);
-        System.exit(exitCode);
-
-    }
-
 
     @Override
     public void run() {
-     
-        throw new CommandLine.ParameterException(this.spec.commandLine(), "Missing required subcommand");
+        
+        Application.launch(GUI.class, "");
+        //throw new CommandLine.ParameterException(this.spec.commandLine(), "Missing required subcommand");
+    }
+
+    public static void main(String[] args){
+        int exitCode = new CommandLine(new CLI()).execute(args);
+        System.exit(exitCode);
     }
 
 }

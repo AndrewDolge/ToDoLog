@@ -33,6 +33,14 @@ public interface EntryDAO {
     public void addLogEntry(int taskID, String content, long logTime);
 
     /**
+     * Adds a log entry for the given task into storage, at the current time.
+     * @param taskID the id of the task associated with the log entry
+     * @param content the user generated content of the log entry
+     */
+    public void addLogEntry(int taskID, String content);
+
+
+    /**
      * updates the given entry in the system.
      * 
      * @param entry
@@ -75,5 +83,11 @@ public interface EntryDAO {
      * @param entryID
      */
     public void deleteEntry(int entryID);
+
+    /**
+     * Deletes everything in the system, as if no entries were added.
+     * 
+     */
+    public void resetEntries();
 
 }// EntryStorage
