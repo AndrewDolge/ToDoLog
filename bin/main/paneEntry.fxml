@@ -8,10 +8,10 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="380.0" prefWidth="545.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="todolog.gui.TabEntryController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="380.0" prefWidth="545.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="todolog.ui.TabEntryController">
     <children>
 
-    <TableView fx:id="tableViewEntries" layoutX="15.0" layoutY="15.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="315.0" prefWidth="250.0">
+    <TableView fx:id="tableViewEntries" layoutX="15.0" layoutY="15.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#onTableViewKeyPress" prefHeight="315.0" prefWidth="250.0">
          <columns>
             <TableColumn fx:id="tableColumnTime" prefWidth="133.59997844696045" text="Time" />
             <TableColumn fx:id="tableColumnTask" prefWidth="115.99998474121094" text="Task" />

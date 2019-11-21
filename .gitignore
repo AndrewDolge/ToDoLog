@@ -12,3 +12,4 @@ build
 .settings/org.eclipse.buildship.core.prefs
 logs/
 
+temp.json

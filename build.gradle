@@ -56,6 +56,6 @@ compileJava {
     options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
 }
 
-mainClassName = 'todolog.CLI'
+mainClassName = 'todolog.ui.CLI'
 
 

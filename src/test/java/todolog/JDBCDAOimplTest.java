@@ -15,6 +15,8 @@ import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import todolog.core.*;
+
 /**
  * Testing class for the JDBCDAOimpl class.
  * 
