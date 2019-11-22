@@ -36,7 +36,7 @@ public class JDBCDAOimplTest{
 
     public static void fillDBWithEntries(JDBCDAOimpl db, long time){
         for(Entry e: getExpectedEntries(time)){
-            db.addLogEntry(e.getTaskID(), e.getContent(), e.getlogTime());
+            db.addLogEntry(e.getTaskID(), e.getContent(), e.getLogTime());
         }
     }
 
@@ -433,7 +433,7 @@ public class JDBCDAOimplTest{
 
         entry.setContent("Updated!");
         entry.setTaskID(2);
-        entry.setlogTime(2);
+        entry.setLogTime(2);
 
         db.updateEntry(entry);
 

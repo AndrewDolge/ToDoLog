@@ -8,43 +8,55 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Utility Class that contains static methods to normalize log times across the system.
+ * Utility Class that contains static methods to normalize log times across the
+ * system.
  * 
- * The system uses epoch seconds, a Long that represents the number of seconds since the unix epoch.
+ * The system uses epoch seconds, a Long that represents the number of seconds
+ * since the unix epoch.
  */
-public class TimeUtil{
+public class TimeUtil {
 
-    private static final  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("Y-MM-dd hh:mm a");
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("Y-MM-dd hh:mm a");
 
-    /**
-     * Returns the number of seconds from the beginning of the current day to the epoch.
-     * 
-     */
-	public static long getDayStart(){
-        return getStartOfDay().toEpochSecond();
 
-    }//getDayStart
 
-    public static long getNextDayStart(){
-         return getStartOfDay().plusDays(1).toEpochSecond();
-    }//getNextDayStart
-
-    public static String convertEpochToString(long epoch){
+    public static String convertEpochToString(long epoch) {
         return LocalDateTime.ofEpochSecond(epoch, 0, getDefaultOffset()).format(formatter);
-    }//convertEpochToString
+    }// convertEpochToString
 
-
-    public static ZoneOffset getDefaultOffset(){
+    public static ZoneOffset getDefaultOffset() {
         return OffsetDateTime.now().getOffset();
     }
 
-    public static long getNow(){
-        return  ZonedDateTime.now().toEpochSecond();
-    }//getNow
+    /*
+    public static long getNow() {
+        return ZonedDateTime.now().toEpochSecond();
+    }// getNow
 
     private static ZonedDateTime getStartOfDay() {
         return ZonedDateTime.now().toLocalDate().atStartOfDay(ZoneId.systemDefault());
     }// getStartOfDay
 
+    public static long getDayStart() {
+        return getStartOfDay().toEpochSecond();
+    }// getDayStart
+    */
+
+    public static long getNow() {
+        return ZonedDateTime.now().toEpochSecond();
+    }// getNow
+
+    private static ZonedDateTime getStartOfDay() {
+        return ZonedDateTime.now().toLocalDate().atStartOfDay(ZoneId.systemDefault());
+    }// getStartOfDay
+
+    public static long getDayStart() {
+        return getStartOfDay().now().toEpochSecond();
+    }// getDayStart
+
+    public static long getNextDayStart() {
+        return getStartOfDay().now().plusMinutes(1).toEpochSecond();
+    }// getNextDayStart
+    
 
 }

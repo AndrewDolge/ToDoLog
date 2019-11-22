@@ -14,6 +14,9 @@ import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -22,6 +25,8 @@ import com.google.gson.stream.JsonWriter;
  * 
  */
 public class TempEntrySerializer{
+
+    private static Logger log = LogManager.getLogger(TempEntrySerializer.class.getName());
 
     private Map<Integer, TempContent> tempEntries;
 

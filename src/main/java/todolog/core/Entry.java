@@ -1,8 +1,5 @@
 package todolog.core;
 
-import java.io.Serializable;
-import java.util.Comparator;
-
 import com.google.gson.JsonObject;
 
 
@@ -43,7 +40,7 @@ public class Entry{
 
     }//Constructor
     
-    public long getlogTime() {
+    public long getLogTime() {
         return logTime;
     }//getlogTime
 
@@ -71,7 +68,7 @@ public class Entry{
         this.entryID = entryID;
     }
 
-    public void setlogTime(long logTime) {
+    public void setLogTime(long logTime) {
         this.logTime = logTime;
     }
 
@@ -88,7 +85,7 @@ public class Entry{
         object.addProperty("entryID", getEntryID()); 
         object.addProperty("taskID", getTaskID());  
         object.addProperty("content", getContent());  
-        object.addProperty("logTime", getlogTime());  
+        object.addProperty("logTime", getLogTime());  
 
         return object.toString();
 

@@ -20,6 +20,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import todolog.core.Entry;
@@ -164,7 +165,16 @@ public class TabEntryController implements TaskEntryDAOListener {
     @FXML
     private void onTableViewKeyPress(KeyEvent event) {
 
-    }
+        if(event.getCode() == KeyCode.BACK_SPACE || event.getCode()  == KeyCode.DELETE){
+
+            TableEntry e = tableViewEntries.getSelectionModel().getSelectedItem();
+
+            if(e != null){
+               entryDAO.deleteEntry(e.getID());
+                updateTable();
+            } 
+        }
+    }//onTableViewKeyPress
 
 
     /**
@@ -204,7 +214,7 @@ public class TabEntryController implements TaskEntryDAOListener {
             tableEntries.add(
                         new TableEntry( 
                                 taskDAO.getTask(e.getTaskID()).getName(),
-                                    e.getlogTime(),
+                                    e.getLogTime(),
                                     e.getContent(),
                                     e.getEntryID()
                                 )

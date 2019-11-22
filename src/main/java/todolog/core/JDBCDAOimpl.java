@@ -134,7 +134,7 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
 
         try (Connection conn = connect()) {
 
-            PreparedStatement stmt = conn.prepareStatement("UPDATE Tasks\n" + "SET taskName = ?" + "WHERE taskID = ?");
+            PreparedStatement stmt = conn.prepareStatement("UPDATE Tasks\n" + "SET taskName = ?,\n" +"active = 1\n"  + "WHERE taskID = ?");
 
             stmt.setString(1, task.getName());
             stmt.setInt(2, task.getTaskID());
@@ -318,7 +318,7 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
 
             statement.setInt(1, entry.getTaskID());
             statement.setString(2, entry.getContent());
-            statement.setLong(3, entry.getlogTime());
+            statement.setLong(3, entry.getLogTime());
             statement.setInt(4, entry.getEntryID());
 
             statement.executeUpdate();
