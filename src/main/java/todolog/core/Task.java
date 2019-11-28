@@ -1,6 +1,5 @@
 package todolog.core;
 
-import java.io.Serializable;
 
 import com.google.gson.Gson;
 
@@ -25,12 +24,10 @@ import com.google.gson.Gson;
  * 
  */
 
- public class Task implements Serializable {
+ public class Task {
 
- 
-    private static final long serialVersionUID = 6655884183833650948L;
 
-    
+    private boolean active;
     private boolean completed;
     private int  taskID;
     private String name;
@@ -40,6 +37,8 @@ import com.google.gson.Gson;
         this.taskID = taskID;
         this.name = name;
         this.completed = completed;
+        this.active    = true;
+
     }// constructor
 
     public String getName() {
@@ -77,21 +76,16 @@ import com.google.gson.Gson;
         Gson gson = new Gson();
 
         return gson.toJson(this);
-        /*
-        JsonObject object = new JsonObject();
-
-        object.addProperty("taskID", getTaskID());  
-        object.addProperty("taskName", getName());  
-        object.addProperty("completed", isCompleted()); 
-        return object.toString();
-        */ 
-
-    
-
-
-       
 
     }//toString
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 
 
 

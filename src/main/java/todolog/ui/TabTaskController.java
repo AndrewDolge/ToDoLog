@@ -1,16 +1,8 @@
 
 package todolog.ui;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.util.ResourceBundle;
+import java.util.List;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,7 +10,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -29,10 +20,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
+import todolog.core.Entry;
 import todolog.core.EntryDAO;
 import todolog.core.Task;
 import todolog.core.TaskDAO;
-import todolog.core.ToDoLogFactory;
 import todolog.util.TempEntrySerializer;
 import todolog.util.TimeUtil;
 
@@ -60,9 +51,6 @@ public class TabTaskController implements TaskEntryDAOListener {
     private EntryDAO entryDAO;
 
     private TempEntrySerializer tempEntries;
-
-    // private HashMap<Integer,String> tempContent;
-    // private HashMap<Integer,Long> tempTimestamp;
 
     private ChangeListener<Task> changeListener = new ChangeListener<Task>() {
         @Override
@@ -105,7 +93,7 @@ public class TabTaskController implements TaskEntryDAOListener {
 
         tempEntries.writeToFile("temp.json");
 
-     }
+     }//onShutdown
 
 
     /**
@@ -118,9 +106,13 @@ public class TabTaskController implements TaskEntryDAOListener {
 
         textAreaContent.setEditable(false);
 
-        loadContent(selectedTask.getTaskID());
+        if(selectedTask != null){
+            loadContent(selectedTask.getTaskID());
+            textAreaContent.setEditable(true);
 
-        textAreaContent.setEditable(true);
+        }
+
+      
     }//onListViewChange
 
     @FXML 
@@ -159,16 +151,19 @@ public class TabTaskController implements TaskEntryDAOListener {
     @FXML
     public void onRecordButtonClick(MouseEvent event){
 
-    buttonRecord.setDisable(true);
+        buttonRecord.setDisable(true);
         Task task =  listViewTasks.getSelectionModel().getSelectedItem();
 
         if(isValidString(textAreaContent.getText())){
 
-            entryDAO.addLogEntry(task.getTaskID(), textAreaContent.getText());
+            recordContent(task.getTaskID(), textAreaContent.getText());
+    
         }
+
 
         //update the list view
         updateListView();
+
         //reselect the task
         listViewTasks.getSelectionModel().select(task);
         buttonRecord.setDisable(false);
@@ -212,8 +207,13 @@ public class TabTaskController implements TaskEntryDAOListener {
 
         tasks.addAll(taskDAO.getTasks());
 
+        textAreaContent.setEditable(false);
+        textAreaContent.clear();
+
         //add a listener to the ListView to trigger on a task change
         listViewTasks.getSelectionModel().selectedItemProperty().addListener( changeListener);
+
+
     }//updateListView
 
     /**
@@ -253,8 +253,47 @@ public class TabTaskController implements TaskEntryDAOListener {
      * 
      */
     private void loadContent(Integer id){
-        textAreaContent.setText( tempEntries.getContent(id));
+
+        String content = "";
+
+        //if the entry is saved in temporary storage
+        if(tempEntries.exists(id)){
+            content = tempEntries.getContent(id);
+        }else{
+
+            List<Entry> entries = entryDAO.findEntries(id,TimeUtil.getDayStart(),null);
+
+            if(!entries.isEmpty()){
+                entries.sort((a,b) -> { return (int) (a.getLogTime() - b.getLogTime());    }  );
+                content = entries.get(0).getContent();
+            }
+        }
+
+        textAreaContent.setText(content);
     }//loadContent
+
+    /**
+     * Records the content into the System, removing it from temporary storage.
+     * 
+     */
+    private void recordContent(Integer taskID, String content, Long logTime){
+
+        if(logTime == null){
+            entryDAO.addLogEntry(taskID, content);
+        }else{
+            entryDAO.addLogEntry(taskID, content,logTime);
+        }
+
+        if(tempEntries.exists(taskID)){
+            tempEntries.remove(taskID);
+        }
+       
+    }
+
+    private void recordContent(Integer taskID, String content){
+        recordContent(taskID, content,null);
+    }
+
 
 
     private final class TaskCell extends ListCell<Task>{
@@ -282,11 +321,33 @@ public class TabTaskController implements TaskEntryDAOListener {
 
     @Override
     public void onTaskEntryChange(TaskDAO taskDAO, EntryDAO entryDAO) {
-        this.taskDAO = taskDAO;
-        this.entryDAO = entryDAO;
-        updateListView();
 
-        // TODO update tempEntries on taskDAO, entryDAO change
+        if(this.taskDAO != null && this.entryDAO != null){
+
+            for(Integer id : tempEntries.getIDs()){
+
+                //if the temp entry was made after yesterday, and it hasn't been completed
+                if(
+                    tempEntries.getLogTime(id) < TimeUtil.getDayStart() &&
+                    !(
+    
+                        this.taskDAO.getTask(id) != null                  &&
+                        this.taskDAO.getTask(id).isCompleted()
+                    ) 
+                ){
+
+                    recordContent(id, tempEntries.getContent(id), tempEntries.getLogTime(id));
+        
+                }//if
+    
+            }//for every entry in temp content
+
+        }//if the task and entry dao are not null
+
+        this.taskDAO  = taskDAO;
+        this.entryDAO = entryDAO;
+
+        updateListView();
 
     }
     

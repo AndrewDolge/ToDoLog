@@ -17,7 +17,6 @@ import todolog.util.TimeUtil;
 /**
  * Stores tasks and log entries into a sql database.
  * 
- * //TODO: Refactor project to a module for easier deployment
  * 
  * @author Andrew Dolge
  * 
@@ -134,10 +133,12 @@ public class JDBCDAOimpl implements EntryDAO, TaskDAO {
 
         try (Connection conn = connect()) {
 
-            PreparedStatement stmt = conn.prepareStatement("UPDATE Tasks\n" + "SET taskName = ?,\n" +"active = 1\n"  + "WHERE taskID = ?");
+            PreparedStatement stmt = conn.prepareStatement("UPDATE Tasks\n" + "SET taskName = ?,\n" +"active = ?\n"  + "WHERE taskID = ?");
 
-            stmt.setString(1, task.getName());
-            stmt.setInt(2, task.getTaskID());
+            stmt.setString(1, task.getName()         );
+            stmt.setInt   (2, task.isActive() ? 1:0  );
+            stmt.setInt   (3, task.getTaskID()       );
+           
             stmt.executeUpdate();
 
             // The user is completing the task without

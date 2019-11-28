@@ -28,7 +28,7 @@ public class TimeUtil {
         return OffsetDateTime.now().getOffset();
     }
 
-    /*
+    
     public static long getNow() {
         return ZonedDateTime.now().toEpochSecond();
     }// getNow
@@ -40,8 +40,12 @@ public class TimeUtil {
     public static long getDayStart() {
         return getStartOfDay().toEpochSecond();
     }// getDayStart
-    */
 
+    public static long getNextDayStart(){
+        return getStartOfDay().plusDays(1).toEpochSecond();
+    }
+    
+    /*
     public static long getNow() {
         return ZonedDateTime.now().toEpochSecond();
     }// getNow
@@ -51,12 +55,13 @@ public class TimeUtil {
     }// getStartOfDay
 
     public static long getDayStart() {
-        return getStartOfDay().now().toEpochSecond();
+        return getStartOfDay().toLocalDate().atTime(ZonedDateTime.now().getHour(), ZonedDateTime.now().getMinute(),0).toEpochSecond(getDefaultOffset());
     }// getDayStart
 
     public static long getNextDayStart() {
-        return getStartOfDay().now().plusMinutes(1).toEpochSecond();
+        return getDayStart() + 60;
     }// getNextDayStart
+    */
     
 
 }

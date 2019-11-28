@@ -7,27 +7,36 @@ package todolog.ui;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.util.Callback;
 import todolog.core.Entry;
 import todolog.core.EntryDAO;
 import todolog.core.Task;
 import todolog.core.TaskDAO;
-import todolog.core.ToDoLogFactory;
 import todolog.util.TimeUtil;
 
 
@@ -36,9 +45,10 @@ import todolog.util.TimeUtil;
  * contains the references and callback methods for the controls in the pane entry.
  * 
  * 
- * TODO: implement deleting Entries
  */
 public class TabEntryController implements TaskEntryDAOListener {
+
+    private static Logger log = LogManager.getLogger(TabEntryController.class.getName());
 
     private TaskDAO  taskDAO;
     private EntryDAO entryDAO;
@@ -98,6 +108,43 @@ public class TabEntryController implements TaskEntryDAOListener {
         tableColumnTime.setCellValueFactory(new PropertyValueFactory<TableEntry, String>("logTime"));
         tableColumnTask.setCellValueFactory(new PropertyValueFactory<TableEntry, String>("taskName"));
 
+        //setup the context menu callback
+        tableViewEntries.setRowFactory(
+
+            new Callback<TableView<TableEntry>, TableRow<TableEntry>>(){
+                @Override
+                public TableRow<TableEntry> call(TableView<TableEntry> tableView){
+
+                    final TableRow<TableEntry> row = new TableRow<>();  
+                    final ContextMenu contextMenu = new ContextMenu();  
+                    final MenuItem removeMenuItem = new MenuItem("Restore Task");  
+
+                    removeMenuItem.setOnAction(new EventHandler<ActionEvent>() {  
+                        @Override  
+                        public void handle(ActionEvent event) {
+                            if(row.getItem() != null){
+                                Task t = taskDAO.getTask(row.getItem().getTaskID());
+                                t.setActive(true);
+                                taskDAO.updateTask(t);
+                            }else{
+                                log.debug("TabEntryController.tableViewEntries Context Menu callback 'Restore Task': row.getItem() is null.");
+                            }
+                          
+                        }  
+                    });  
+                    contextMenu.getItems().add(removeMenuItem);  
+                   // Set context menu on row, but use a binding to make it only show for non-empty rows:  
+                    row.contextMenuProperty().bind(  
+                            Bindings.when(row.emptyProperty())  
+                            .then((ContextMenu)null)  
+                            .otherwise(contextMenu)  
+                    );  
+                    return row ;  
+
+                }
+            }
+
+        );
    
         tableViewEntries.getSelectionModel().selectedIndexProperty().addListener(tableChangeListener);
 
@@ -132,7 +179,7 @@ public class TabEntryController implements TaskEntryDAOListener {
 
         if(selected != null){
 
-            int id = selected.getID();
+            int id = selected.getEntryID();
             Entry e = entryDAO.getEntry(id);
             e.setContent(textAreaEntryDisplay.getText());
 
@@ -170,7 +217,7 @@ public class TabEntryController implements TaskEntryDAOListener {
             TableEntry e = tableViewEntries.getSelectionModel().getSelectedItem();
 
             if(e != null){
-               entryDAO.deleteEntry(e.getID());
+               entryDAO.deleteEntry(e.getEntryID());
                 updateTable();
             } 
         }
@@ -216,7 +263,8 @@ public class TabEntryController implements TaskEntryDAOListener {
                                 taskDAO.getTask(e.getTaskID()).getName(),
                                     e.getLogTime(),
                                     e.getContent(),
-                                    e.getEntryID()
+                                    e.getEntryID(),
+                                    e.getTaskID()
                                 )
             );
 
@@ -239,15 +287,17 @@ public class TabEntryController implements TaskEntryDAOListener {
 
         private StringProperty taskName;
         private StringProperty logTime;
-        private int id;
+        private int entryID;
+        private int taskID;
         private String content;
 
-        public TableEntry(String taskName, long logTime, String content, int id){
+        public TableEntry(String taskName, long logTime, String content, int entryID, int taskID){
 
             this.taskName   = new SimpleStringProperty(taskName);
             this.logTime    = new SimpleStringProperty(TimeUtil.convertEpochToString(logTime)); 
             this.content    = content;
-            this.id         = id;
+            this.entryID    = entryID;
+            this.taskID     = taskID;
         }
 
         public String getTaskName() {
@@ -262,9 +312,13 @@ public class TabEntryController implements TaskEntryDAOListener {
             return this.content;
         }
 
-        public int getID(){
-            return this.id;
+        public int getEntryID(){
+            return this.entryID;
         }        
+
+        public int getTaskID(){
+            return this.taskID;
+        }
     }//private class
 
     @Override

@@ -11,7 +11,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -48,6 +51,7 @@ public class TempEntrySerializer{
             read(in);
         }catch(Exception e){
             e.printStackTrace();
+            log.warn(e);
         }
     }
 
@@ -121,11 +125,26 @@ public class TempEntrySerializer{
     /**
      * Adds the entry to the Temporary Serializer.
      * 
-     * Stores the content and timstamp, with a key of the provided id.
+     * Stores the content and timestamp, with a key of the provided id.
      * 
      */
-    public void put(int id,  String content,long logtime ){
-       getEntries().put(id, new TempContent(id, content,logtime));
+    public void put(int id,  String content,long logTime ){
+       getEntries().put(id, new TempContent(id, content,logTime));
+    }
+
+
+    public List<Integer> getIDs(){
+        return new LinkedList<Integer>(getEntries().keySet());
+    }
+
+    /**
+     * removes the content with the id from the serializer, if it exists.
+     */
+    public void remove(Integer id){
+        if(id != null && exists(id)){
+            getEntries().remove(id);
+        }
+       
     }
 
     public long getLogTime(Integer id){

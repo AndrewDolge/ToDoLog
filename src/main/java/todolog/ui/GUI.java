@@ -50,10 +50,6 @@ public class GUI extends Application {
 
 
 
-
-
-
-
             stage.setResizable(false);
             stage.setTitle("To Do Log");
             stage.setScene(scene);
