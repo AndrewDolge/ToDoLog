@@ -10,6 +10,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import todolog.core.EntryDAO;
@@ -49,6 +50,7 @@ public class GUI extends Application {
             scene.getStylesheets().add("tabTask.css");
 
 
+            stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("TodologIcon.png")));
 
             stage.setResizable(false);
             stage.setTitle("To Do Log");
