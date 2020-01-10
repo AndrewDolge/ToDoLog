@@ -44,29 +44,34 @@ public class TempEntrySerializer{
 
     }//constructor
 
-
+    /**
+     * Wrapper method for the read method that turns files into input streams.
+     * @param file the string representation of the path or name of the file.
+     */
     public void readFromFile(String file){
 
         try(InputStream in = new FileInputStream(new File(file))){
             read(in);
         }catch(Exception e){
-            e.printStackTrace();
             log.warn(e);
         }
-    }
+    }//readFromFile
 
+    /**
+     * Wrapper method for the write method that turns files into output streams.
+     * 
+     * @param file the string representation of the path or name of the file.
+     */
     public void writeToFile(String file){
         File f = new File(file);
-
-
         try{
             if(!f.exists()){
                 f.createNewFile();
             }
         }catch(Exception e){
             e.printStackTrace();
+            log.warn(e);
         }
-
 
         try(OutputStream out = new FileOutputStream(f)){
 
@@ -77,9 +82,14 @@ public class TempEntrySerializer{
         }
 
 
-    }
+    }//writeToFile
 
-
+    /**
+     * Converts the temporary entries into a json array and writes them to an output stream.
+     * 
+     * @param out the output stream to write to.
+     * 
+     */
     public void write(OutputStream out) throws IOException{
 
         JsonWriter writer = new JsonWriter(new BufferedWriter(new OutputStreamWriter(out, "UTF-8")));
@@ -99,8 +109,8 @@ public class TempEntrySerializer{
      * Reads the entries from an input stream
      * 
      * 
-     * @param in
-     * @throws IOException
+     * @param in the input stream to read from
+     * @throws IOException 
      */
     public void read(InputStream in) throws IOException{
 
@@ -132,10 +142,13 @@ public class TempEntrySerializer{
        getEntries().put(id, new TempContent(id, content,logTime));
     }
 
-
+    /**
+     * Gets all IDs within the temporary serializer.
+     * @return a list of all IDs in the serializer.
+     */
     public List<Integer> getIDs(){
         return new LinkedList<Integer>(getEntries().keySet());
-    }
+    }//getIDs
 
     /**
      * removes the content with the id from the serializer, if it exists.
@@ -145,19 +158,28 @@ public class TempEntrySerializer{
             getEntries().remove(id);
         }
        
-    }
+    }//remove
 
+    /**
+     * Getter method for the log time of an entry with the given id.
+     */
     public long getLogTime(Integer id){
         return getEntries().getOrDefault(id,nullTempContent).getLogTime();
-    }
+    }//getLogTime
 
+    /**
+     * Getter method for the content of an entry with the given id.
+     */
     public String getContent(Integer id){
         return  getEntries().getOrDefault(id, nullTempContent).getContent();
-    }
+    }//getContent
 
+    /**
+     * determines if an entry is apart of the list of temporary entries.
+     */
     public boolean exists(Integer id){
         return getEntries().containsKey(id);
-    }
+    }//exists
 
     /**
      * Returns a shallow copy of the entry list for modification.
@@ -166,7 +188,6 @@ public class TempEntrySerializer{
     private Map<Integer, TempContent> getEntries(){
         return tempEntries == null ? null : tempEntries;
     }//getEntires
-
 
     /**
      * Internal class to hold the data of the temporary content.
